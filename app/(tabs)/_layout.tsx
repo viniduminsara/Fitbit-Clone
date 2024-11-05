@@ -11,10 +11,10 @@ export default function TabLayout() {
                 tabBarActiveTintColor: '#536762',
                 header: () => <Header/>,
                 tabBarStyle: {
-                    height: 70,
+                    height: 90,
                     backgroundColor: '#F4F4F4',
-                    paddingBottom: 10,
-                    paddingTop: 10,
+                    paddingBottom: 20,
+                    paddingTop: 20,
                     elevation: 0,
                     shadowOffset: {
                         width: 0, height: 0
@@ -36,7 +36,7 @@ export default function TabLayout() {
                             }}>
                                 <MaterialCommunityIcons
                                     name="weather-sunset"
-                                    size={20}
+                                    size={24}
                                     color="black"
                                 />
                             </View>
@@ -56,7 +56,7 @@ export default function TabLayout() {
                             }}>
                                 <FontAwesome5
                                     name="clipboard"
-                                    size={16}
+                                    size={20}
                                     color="black"
                                 />
                             </View>
@@ -76,7 +76,7 @@ export default function TabLayout() {
                             }}>
                                 <MaterialCommunityIcons
                                     name="view-dashboard-outline"
-                                    size={20}
+                                    size={24}
                                     color="black"
                                 />
                             </View>
