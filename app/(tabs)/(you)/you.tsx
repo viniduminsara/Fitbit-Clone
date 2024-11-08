@@ -38,14 +38,20 @@ const YouScreen = () => {
             <View className='mt-6'>
                 <MediumText className='text-2xl mb-4'>Goals</MediumText>
                 <View className='flex-row'>
-                    <TouchableOpacity className='bg-white w-40 h-56 p-6 mr-4 flex justify-between rounded-2xl'>
+                    <TouchableOpacity
+                        onPress={() => router.push('goal')}
+                        className='bg-white w-40 h-56 p-6 mr-4 flex justify-between rounded-2xl'
+                    >
                         <FontAwesome6 name="person-running" size={28} color="black" />
                         <View>
                             <MediumText className='text-xl'>Activity</MediumText>
                             <LightText className='text-lg'>5 goals</LightText>
                         </View>
                     </TouchableOpacity>
-                    <TouchableOpacity className='bg-white w-40 h-56 p-6 flex justify-between rounded-2xl'>
+                    <TouchableOpacity
+                        onPress={() => router.push('goal')}
+                        className='bg-white w-40 h-56 p-6 mr-4 flex justify-between rounded-2xl'
+                    >
                         <Feather name="activity" size={28} color="black" />
                         <View>
                             <MediumText className='text-xl'>Health</MediumText>

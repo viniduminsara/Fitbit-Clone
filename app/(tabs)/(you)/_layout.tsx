@@ -7,6 +7,7 @@ const YouLayout = () => {
             <Stack.Screen name="profile/index"/>
             <Stack.Screen name="profile/edit/info"/>
             <Stack.Screen name="profile/edit/social"/>
+            <Stack.Screen name="goal/index"/>
         </Stack>
     )
 }
