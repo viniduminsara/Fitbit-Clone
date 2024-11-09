@@ -18,7 +18,7 @@ const HomeStats = ({ title, image, value, goalValue, isSecondary, isDistance }: 
     const formattedValue = isDistance
         ? value >= 1000
             ? (value / 1000).toFixed(2)
-            : value
+            : value.toFixed(2)
         : value >= 1000
             ? value.toLocaleString()
             : value.toString();

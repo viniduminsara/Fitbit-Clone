@@ -2,8 +2,98 @@ import {View, ScrollView} from 'react-native';
 import HomeStats from "@/components/HomeStats/HomeStats";
 import {LightText, MediumText, RegularText, SemiBoldText} from "@/components/StyledText";
 import HomeStatsItem from "@/components/HomeStats/HomeStatsItem";
+import {useCallback, useEffect, useRef, useState} from "react";
+import {Accelerometer} from "expo-sensors";
+
+const STEP_LENGTH_METERS = 0.762;
+const CALORIES_PER_STEP = 0.04;
 
 const HomeScreen = () => {
+
+    const [stats, setStats] = useState({
+        steps: 0,
+        distance: 0,
+        calories: 0,
+    });
+    const [isCounting, setCounting] = useState(false);
+    const lastYRef = useRef(0);
+    const lastTimestampRef = useRef(0);
+    const accumulatedStepsRef = useRef(0);
+
+    const updateStats = useCallback(() => {
+        setStats((prevState) => {
+            const newSteps = prevState.steps + accumulatedStepsRef.current;
+            return {
+                steps: newSteps,
+                distance: (newSteps * STEP_LENGTH_METERS) / 1000,
+                calories: newSteps * CALORIES_PER_STEP,
+            };
+        });
+        accumulatedStepsRef.current = 0; // Reset accumulated steps after updating
+    }, []);
+
+    useEffect(() => {
+        let stepSubscription: any;
+
+        Accelerometer.isAvailableAsync().then((result) => {
+            if (result) {
+                stepSubscription = Accelerometer.addListener((accelerometer) => {
+                    const { y } = accelerometer;
+                    const threshold = 0.1;
+                    const timestamp = new Date().getTime();
+
+                    if (
+                        Math.abs(y - lastYRef.current) > threshold &&
+                        !isCounting &&
+                        timestamp - lastTimestampRef.current > 800
+                    ) {
+                        setCounting(true);
+                        lastYRef.current = y;
+                        lastTimestampRef.current = timestamp;
+
+                        accumulatedStepsRef.current += 1;
+
+                        if (accumulatedStepsRef.current >= 5 || timestamp - lastTimestampRef.current > 3000) {
+                            updateStats();
+                        }
+
+                        setTimeout(() => {
+                            setCounting(false);
+                        }, 1200);
+                    }
+                });
+            } else {
+                console.log("Accelerometer not available on this device");
+            }
+        });
+
+        return () => {
+            if (stepSubscription) {
+                stepSubscription.remove();
+            }
+        };
+    }, [isCounting, updateStats]);
+
+    // useEffect(() => {
+    //     const getTodayStepData = async () => {
+    //         const end = new Date();
+    //         const start = new Date();
+    //         start.setHours(0, 0, 0, 0); // Start of the day
+    //
+    //         const result = await Pedometer.getStepCountAsync(start, end);
+    //         if (result) {
+    //             const steps = result.steps;
+    //
+    //             const distance = (steps * STEP_LENGTH_METERS) / 1000;
+    //
+    //             const calories = steps * CALORIES_PER_STEP;
+    //
+    //             setStats({ steps, distance, calories, });
+    //         }
+    //     };
+    //
+    //     getTodayStepData().catch((e) => setIsHistoryStepsNA(true))
+    // }, []);
 
     return (
         <ScrollView className='w-full h-full px-4'>
@@ -13,7 +103,7 @@ const HomeScreen = () => {
             <View className='flex justify-center items-center mb-4'>
                 <HomeStats
                     title='Steps'
-                    value={2857}
+                    value={stats.steps}
                     goalValue={5000}
                     image={require('../../../assets/images/home/shoe.png')}
                     isSecondary={false}
@@ -23,7 +113,7 @@ const HomeScreen = () => {
             <View className='flex-row justify-around items-center'>
                 <HomeStats
                     title='km'
-                    value={3015}
+                    value={stats.distance}
                     goalValue={8000}
                     image={require('../../../assets/images/home/distance.png')}
                     isSecondary={true}
@@ -31,7 +121,7 @@ const HomeScreen = () => {
                 />
                 <HomeStats
                     title='cal'
-                    value={1966}
+                    value={stats.calories}
                     goalValue={2500}
                     image={require('../../../assets/images/home/calorie.png')}
                     isSecondary={true}

@@ -23,7 +23,7 @@ const WelcomeScreen = () => {
                     </TouchableOpacity>
                     <TouchableOpacity
                         className='bg-primary w-full py-3 flex-row justify-center rounded-3xl border-2 border-secondary'
-                        onPress={() => router.push('/(auth)/emailSignin' as Href)}
+                        onPress={() => router.push('/(tabs)' as Href)}
                     >
                         <Text className='text-secondary'>Sign in with Fitbit</Text>
                     </TouchableOpacity>
