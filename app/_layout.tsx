@@ -1,4 +1,3 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import {Stack} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import {useEffect} from 'react';
@@ -14,6 +13,9 @@ import {
     Assistant_600SemiBold,
     Assistant_700Bold
 } from '@expo-google-fonts/assistant'
+import {SafeAreaProvider} from "react-native-safe-area-context";
+import {AppContextProvider} from "@/context/AppContext";
+import {AlertNotificationRoot} from "react-native-alert-notification";
 
 export {
     // Catch any errors thrown by the Layout component.
@@ -59,10 +61,16 @@ function RootLayoutNav() {
     const colorScheme = useColorScheme();
 
     return (
-        <Stack screenOptions={{headerShown: false, animation: 'ios'}}>
-            <Stack.Screen name="index"/>
-            <Stack.Screen name="(tabs)"/>
-            <Stack.Screen name="(auth)"/>
-        </Stack>
+        <SafeAreaProvider>
+            <AlertNotificationRoot theme='light'>
+                <AppContextProvider>
+                    <Stack screenOptions={{headerShown: false, animation: 'ios'}}>
+                        <Stack.Screen name="index"/>
+                        <Stack.Screen name="(tabs)"/>
+                        <Stack.Screen name="(auth)"/>
+                    </Stack>
+                </AppContextProvider>
+            </AlertNotificationRoot>
+        </SafeAreaProvider>
     );
 }
