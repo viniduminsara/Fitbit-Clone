@@ -1,55 +1,139 @@
 import ScreenLayout from "@/components/ScreenLayout";
-import {Image, Text, TextInput, TouchableOpacity, View} from 'react-native';
-import React, {useState} from "react";
-import {Ionicons} from "@expo/vector-icons";
+import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import {Href, useRouter} from "expo-router";
+import auth from "@react-native-firebase/auth";
+import { ALERT_TYPE, Toast } from "react-native-alert-notification";
+import {handleAuthError} from "@/util/authErrorHandle";
+import {MediumText, RegularText, SemiBoldText} from "@/components/StyledText";
+import Spinner from "react-native-loading-spinner-overlay";
 
 const EmailSigninScreen = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+    const [formState, setFormState] = useState({
+        email: '',
+        displayName: '',
+        password: '',
+        isPasswordVisible: false,
+    });
+    const [isSignIn, setIsSignIn] = useState(true);
+    const [isLoading, setLoading] = useState(false);
     const router = useRouter();
 
+    const handleInputChange = (name: string, value: string) => {
+        setFormState((prevState) => ({
+            ...prevState,
+            [name]: value,
+        }));
+    };
+
     const togglePasswordVisibility = () => {
-        setIsPasswordVisible(!isPasswordVisible);
+        setFormState((prevState) => ({
+            ...prevState,
+            isPasswordVisible: !prevState.isPasswordVisible,
+        }));
+    };
+
+    const toggleAuthMode = () => {
+        setIsSignIn((prev) => !prev);
+    };
+
+    const handleSubmit = () => {
+        if (formState.email !== '' && formState.password) {
+            setLoading(true);
+            if (isSignIn) {
+                auth()
+                    .signInWithEmailAndPassword(formState.email, formState.password)
+                    .then(() => {
+                        setLoading(false);
+                        router.replace('/(tabs)' as Href);
+                    })
+                    .catch((error) => {
+                        setLoading(false);
+                        handleAuthError(error);
+                    })
+            } else {
+                auth()
+                    .createUserWithEmailAndPassword(formState.email, formState.password)
+                    .then((userCredentials) => {
+                        userCredentials.user.updateProfile({displayName: formState.displayName})
+                            .then(() => {
+                                setLoading(false);
+                                router.replace('/profileInfo' as Href)
+                            })
+                            .catch((error) => {
+                                setLoading(false);
+                                handleAuthError(error)
+                            })
+                    })
+                    .catch((error) => {
+                        setLoading(false);
+                        handleAuthError(error);
+                    });
+            }
+        } else {
+            Toast.show({
+                type: ALERT_TYPE.WARNING,
+                title: 'Warning',
+                textBody: 'Please enter valid data',
+                autoClose: 2000,
+            });
+        }
     };
 
     return (
-        <ScreenLayout bgColor='background'>
-            <View className='w-full h-full px-4 flex justify-center items-center'>
-                <View className='w-full h-fit flex justify-center items-center px-4 py-6 rounded-xl border border-gray-200 bg-white'>
-                    <View className='flex-row justify-center items-center space-x-2'>
-                        <Image source={require('../../assets/images/logo_black.png')} className='w-6 h-6'/>
-                        <Text className='text-3xl text-secondary'>fitbit</Text>
+        <ScreenLayout bgColor="background">
+            <Spinner visible={isLoading} color='#08B9AF'/>
+            <View className="w-full h-full px-4 flex justify-center items-center">
+                <View className="w-full h-fit flex justify-center items-center px-4 py-6 rounded-xl border border-gray-200 bg-white">
+                    <View className="flex-row justify-center items-center space-x-2">
+                        <Image source={require('../../assets/images/logo_black.png')} className="w-6 h-6" />
+                        <SemiBoldText className="text-3xl text-secondary">fitbit</SemiBoldText>
                     </View>
-                    <Text className="text-lg text-center font-light my-6">Sign In</Text>
+                    <SemiBoldText className="text-xl text-center font-light my-6">{isSignIn ? 'Sign In' : 'Sign Up'}</SemiBoldText>
 
                     <View className="w-full mb-4">
-                        <Text className="text-secondary text-sm mb-2">EMAIL ADDRESS</Text>
+                        <MediumText className="text-secondary text-sm mb-2">EMAIL ADDRESS</MediumText>
                         <TextInput
-                            value={email}
-                            onChangeText={setEmail}
+                            value={formState.email}
+                            onChangeText={(value) => handleInputChange('email', value)}
                             placeholder="Your account email"
                             keyboardType="email-address"
                             className="border-b border-gray-300 py-2 text-gray-800"
+                            style={{fontFamily: 'Assistant_400Regular'}}
                         />
                     </View>
 
+                    {!isSignIn && (
+                        <View className="w-full mb-4">
+                            <MediumText className="text-secondary text-sm mb-2">DISPLAY NAME</MediumText>
+                            <TextInput
+                                value={formState.displayName}
+                                onChangeText={(value) => handleInputChange('displayName', value)}
+                                placeholder="Your account display name"
+                                keyboardType="email-address"
+                                className="border-b border-gray-300 py-2 text-gray-800"
+                                style={{fontFamily: 'Assistant_400Regular'}}
+                            />
+                        </View>
+                    )}
+
                     <View className="w-full mb-8 relative">
-                        <Text className="text-secondary text-sm mb-2">PASSWORD</Text>
+                        <MediumText className="text-secondary text-sm mb-2">PASSWORD</MediumText>
                         <TextInput
-                            value={password}
-                            onChangeText={setPassword}
+                            value={formState.password}
+                            onChangeText={(value) => handleInputChange('password', value)}
                             placeholder="Enter your secure password"
-                            secureTextEntry={!isPasswordVisible}
+                            secureTextEntry={!formState.isPasswordVisible}
                             className="border-b border-gray-300 py-2 text-gray-800"
+                            style={{fontFamily: 'Assistant_400Regular'}}
                         />
                         <TouchableOpacity
                             onPress={togglePasswordVisibility}
                             className="absolute right-0 top-10"
                         >
                             <Ionicons
-                                name={isPasswordVisible ? 'eye-off' : 'eye'}
+                                name={formState.isPasswordVisible ? 'eye-off' : 'eye'}
                                 size={24}
                                 color="gray"
                             />
@@ -57,17 +141,22 @@ const EmailSigninScreen = () => {
                     </View>
 
                     <TouchableOpacity className="w-full mb-8">
-                        <Text className="text-[#CCBB9F]">Forgot your password?</Text>
+                        <RegularText className="text-[#CCBB9F]">Forgot your password?</RegularText>
                     </TouchableOpacity>
 
-                    <TouchableOpacity className="bg-primary py-2 w-64 rounded-2xl" onPress={() => router.replace('/(auth)/profileInfo' as Href)}>
-                        <Text className="text-center text-white">SIGN IN</Text>
+                    <TouchableOpacity className="bg-primary py-2 w-64 rounded-2xl" onPress={handleSubmit}>
+                        <Text className="text-center text-white">{isSignIn ? 'SIGN IN' : 'SIGN UP'}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={toggleAuthMode} className="mt-4">
+                        <MediumText className="text-[#CCBB9F] text-lg">
+                            {isSignIn ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
+                        </MediumText>
                     </TouchableOpacity>
                 </View>
             </View>
         </ScreenLayout>
-    )
-}
+    );
+};
 
 export default EmailSigninScreen;
-
