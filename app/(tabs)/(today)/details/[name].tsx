@@ -3,9 +3,11 @@ import {LightText, MediumText, RegularText, SemiBoldText} from "@/components/Sty
 import {useLocalSearchParams} from "expo-router";
 import BarChart from "@/components/weeklyBarChart/BarChart";
 import {AnimatedCircularProgress} from "react-native-circular-progress";
+import {useAppContext} from "@/context/AppContext";
 
 const DetailsScreen = () => {
     const { name } = useLocalSearchParams();
+    const {userData} = useAppContext();
     const data = [
         { value: 30, label: '0' },
         { value: 0, label: '4 '},
@@ -23,9 +25,10 @@ const DetailsScreen = () => {
                 <View>
                     <View className='flex-row items-center'>
                         <SemiBoldText className='text-5xl mr-1'>0</SemiBoldText>
-                        <RegularText className='text-lg'>of 10,000 steps</RegularText>
+                        <RegularText className='text-lg'>
+                            of {name.toLocaleString().toLowerCase() === 'energy burned' ? userData?.goals?.energyBurned : userData?.goals[name.toLocaleString().toLowerCase()]} {name.toLocaleString().toLowerCase()}</RegularText>
                     </View>
-                    <LightText className='text-lg'>You're 10,000 steps away from hitting</LightText>
+                    <LightText className='text-lg'>You're {((name.toLocaleString().toLowerCase() === 'energy burned' ? userData?.goals?.energyBurned : userData?.goals[name.toLocaleString().toLowerCase()]) - 1224)} steps away from hitting</LightText>
                     <LightText className='text-lg'>your daily goal</LightText>
                 </View>
                 <AnimatedCircularProgress

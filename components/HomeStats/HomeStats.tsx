@@ -5,14 +5,14 @@ import {BoldText, LightText} from "@/components/StyledText";
 interface IHomeStatsProps {
     title: string;
     value: number;
-    goalValue: number;
+    goalValue: number | undefined;
     image: ImageSourcePropType;
     isSecondary: boolean;
     isDistance: boolean;
 }
 
 const HomeStats = ({ title, image, value, goalValue, isSecondary, isDistance }: IHomeStatsProps) => {
-    const fillPercentage = (value / goalValue) * 100;
+    const fillPercentage = goalValue ? (value / goalValue) * 100 : 0;
 
     // Format value based on distance or comma requirement
     const formattedValue = isDistance

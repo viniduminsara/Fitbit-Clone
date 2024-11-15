@@ -4,6 +4,7 @@ import {LightText, MediumText, RegularText, SemiBoldText} from "@/components/Sty
 import HomeStatsItem from "@/components/HomeStats/HomeStatsItem";
 import {useCallback, useEffect, useRef, useState} from "react";
 import {Accelerometer} from "expo-sensors";
+import {useAppContext} from "@/context/AppContext";
 
 const STEP_LENGTH_METERS = 0.762;
 const CALORIES_PER_STEP = 0.04;
@@ -19,6 +20,7 @@ const HomeScreen = () => {
     const lastYRef = useRef(0);
     const lastTimestampRef = useRef(0);
     const accumulatedStepsRef = useRef(0);
+    const {userData} = useAppContext();
 
     const updateStats = useCallback(() => {
         setStats((prevState) => {
@@ -104,7 +106,7 @@ const HomeScreen = () => {
                 <HomeStats
                     title='Steps'
                     value={stats.steps}
-                    goalValue={5000}
+                    goalValue={userData?.goals?.steps}
                     image={require('../../../assets/images/home/shoe.png')}
                     isSecondary={false}
                     isDistance={false}
@@ -114,7 +116,7 @@ const HomeScreen = () => {
                 <HomeStats
                     title='km'
                     value={stats.distance}
-                    goalValue={8000}
+                    goalValue={userData?.goals?.distance ? (userData?.goals?.distance * 1000) : 0}
                     image={require('../../../assets/images/home/distance.png')}
                     isSecondary={true}
                     isDistance={true}
@@ -122,7 +124,7 @@ const HomeScreen = () => {
                 <HomeStats
                     title='cal'
                     value={stats.calories}
-                    goalValue={2500}
+                    goalValue={userData?.goals?.energyBurned}
                     image={require('../../../assets/images/home/calorie.png')}
                     isSecondary={true}
                     isDistance={false}
@@ -151,11 +153,11 @@ const HomeScreen = () => {
                 </View>
             </View>
             <View className='gap-y-3'>
-                <HomeStatsItem title='Steps' value={2857} goalValue={5000}
+                <HomeStatsItem title='Steps' value={stats.steps} goalValue={userData?.goals?.steps}
                                image={require('../../../assets/images/home/shoe.png')} isDistance={false}/>
-                <HomeStatsItem title='Distance' value={3015} goalValue={8000}
+                <HomeStatsItem title='Distance' value={stats.distance} goalValue={userData?.goals?.distance ? (userData?.goals?.distance * 1000) : 0}
                                image={require('../../../assets/images/home/distance.png')} isDistance={true}/>
-                <HomeStatsItem title='Energy burned' value={1966} goalValue={2500}
+                <HomeStatsItem title='Energy burned' value={stats.calories} goalValue={userData?.goals?.energyBurned}
                                image={require('../../../assets/images/home/calorie.png')} isDistance={false}/>
             </View>
         </ScrollView>

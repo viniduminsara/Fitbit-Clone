@@ -6,14 +6,14 @@ import {useRouter} from "expo-router";
 interface IHomeStatsItemProps {
     title: string;
     value: number;
-    goalValue: number;
+    goalValue: number | undefined;
     image: ImageSourcePropType;
     isDistance: boolean;
 }
 
 const HomeStatsItem = ({ title, image, value, goalValue, isDistance} : IHomeStatsItemProps) => {
     const router = useRouter();
-    const fillPercentage = (value / goalValue) * 100;
+    const fillPercentage = goalValue ? (value / goalValue) * 100 : 0;
 
     const formattedValue = isDistance
         ? value >= 1000

@@ -8,3 +8,12 @@ export const handleAuthError = (error: any) => {
             button: 'close',
         })
 };
+
+export const handleConnectionError = () => {
+    Dialog.show({
+        type: ALERT_TYPE.WARNING,
+        title: 'Warning',
+        textBody: 'Please check your connection',
+        button: 'close',
+    })
+};

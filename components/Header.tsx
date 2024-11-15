@@ -2,6 +2,7 @@ import { View, Platform, StatusBar, Image } from "react-native";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import {BoldText, SemiBoldText} from "@/components/StyledText";
 import auth from "@react-native-firebase/auth";
+import React from "react";
 
 const Header = () => {
     const user = auth().currentUser;
@@ -11,6 +12,7 @@ const Header = () => {
             className='flex flex-row justify-between items-center py-3 px-4'
             style={{ marginTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}
         >
+            <StatusBar barStyle="dark-content" backgroundColor="white" />
             <MaterialIcons name="devices-other" size={24} color="black" />
             <SemiBoldText className='text-3xl'>fitbit</SemiBoldText>
             <View>
