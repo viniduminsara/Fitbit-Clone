@@ -5,9 +5,11 @@ import { Ionicons } from "@expo/vector-icons";
 import {Href, useRouter} from "expo-router";
 import auth from "@react-native-firebase/auth";
 import { ALERT_TYPE, Toast } from "react-native-alert-notification";
-import {handleAuthError} from "@/util/authErrorHandle";
+import {handleAuthError} from "@/util/errors";
 import {MediumText, RegularText, SemiBoldText} from "@/components/StyledText";
 import Spinner from "react-native-loading-spinner-overlay";
+import {getUserByUid, saveUserWithoutDetails} from "@/service/userService";
+import {useAppContext} from "@/context/AppContext";
 
 const EmailSigninScreen = () => {
     const [formState, setFormState] = useState({
@@ -19,6 +21,7 @@ const EmailSigninScreen = () => {
     const [isSignIn, setIsSignIn] = useState(true);
     const [isLoading, setLoading] = useState(false);
     const router = useRouter();
+    const {updateUserData} = useAppContext();
 
     const handleInputChange = (name: string, value: string) => {
         setFormState((prevState) => ({
@@ -44,9 +47,26 @@ const EmailSigninScreen = () => {
             if (isSignIn) {
                 auth()
                     .signInWithEmailAndPassword(formState.email, formState.password)
-                    .then(() => {
-                        setLoading(false);
-                        router.replace('/(tabs)' as Href);
+                    .then((userCredential) => {
+                        getUserByUid(userCredential.user.uid)
+                            .then((res: any) => {
+                                const userData = res.data;
+                                updateUserData(userData);
+
+                                setLoading(false);
+                                router.replace('/(tabs)' as Href);
+                            })
+                            .catch((err) => {
+                                setLoading(false);
+                                if (err.status === 404){
+                                    Toast.show({
+                                        type: ALERT_TYPE.WARNING,
+                                        title: 'Warning',
+                                        textBody: 'User not found.',
+                                        autoClose: 2000,
+                                    });
+                                }
+                            })
                     })
                     .catch((error) => {
                         setLoading(false);
@@ -55,11 +75,30 @@ const EmailSigninScreen = () => {
             } else {
                 auth()
                     .createUserWithEmailAndPassword(formState.email, formState.password)
-                    .then((userCredentials) => {
-                        userCredentials.user.updateProfile({displayName: formState.displayName})
+                    .then((userCredential) => {
+                        userCredential.user.updateProfile({displayName: formState.displayName})
                             .then(() => {
-                                setLoading(false);
-                                router.replace('/profileInfo' as Href)
+                                saveUserWithoutDetails(
+                                    userCredential.user.uid,
+                                    userCredential.user.email,
+                                    formState.displayName
+                                ).then((res: any) => {
+                                    const userData = res.data;
+                                    updateUserData(userData);
+
+                                    setLoading(false);
+                                    router.replace('/profileInfo' as Href);
+                                }).catch((error) => {
+                                    setLoading(false);
+                                    if (error.response.status === 409){
+                                        Toast.show({
+                                            type: ALERT_TYPE.WARNING,
+                                            title: 'Warning',
+                                            textBody: 'User already created.',
+                                            autoClose: 2000,
+                                        });
+                                    }
+                                })
                             })
                             .catch((error) => {
                                 setLoading(false);
