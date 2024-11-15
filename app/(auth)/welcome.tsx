@@ -6,10 +6,14 @@ import {MediumText, RegularText, SemiBoldText} from "@/components/StyledText";
 import {GoogleSignin} from "@react-native-google-signin/google-signin";
 import auth from "@react-native-firebase/auth";
 import Spinner from "react-native-loading-spinner-overlay";
+import {getUserByUid, saveUserWithoutDetails} from "@/service/userService";
+import {useAppContext} from "@/context/AppContext";
+import {handleConnectionError} from "@/util/errors";
 
 const WelcomeScreen = () => {
     const router = useRouter();
     const [isLoading, setLoading] = useState(false);
+    const {updateUserData} = useAppContext();
 
     GoogleSignin.configure({
         webClientId: '963994442676-1f9hod5bf504vpgval9u2ktc646slbpo.apps.googleusercontent.com',
@@ -32,12 +36,32 @@ const WelcomeScreen = () => {
             const googleCredential = auth.GoogleAuthProvider.credential(idToken);
 
             auth().signInWithCredential(googleCredential)
-                .then(() => {
-                    setLoading(false);
-                    router.replace('/profileInfo' as Href);
+                .then((userCredential) => {
+                     getUserByUid(userCredential.user.uid)
+                         .then((res:any) => {
+                             const userData = res.data;
+                             updateUserData(userData);
+
+                             setLoading(false);
+                             router.replace('/(tabs)' as Href);
+                         })
+                         .catch((error) => {
+                             saveUserWithoutDetails(
+                                 userCredential.user.uid,
+                                 userCredential.user.email,
+                                 userCredential.user.displayName
+                             ).then((res:any) => {
+                                 const userData = res.data;
+                                 updateUserData(userData);
+
+                                 setLoading(false);
+                                 router.replace('/profileInfo' as Href);
+                             })
+                         })
                 })
         } catch (error: any) {
             setLoading(false);
+            handleConnectionError();
         }
     }
 
@@ -62,7 +86,7 @@ const WelcomeScreen = () => {
                     </TouchableOpacity>
                     <TouchableOpacity
                         className='bg-primary w-full py-3 flex-row justify-center rounded-3xl border-2 border-secondary'
-                        onPress={() => router.push('/emailSignin' as Href)}
+                        onPress={() => router.replace('/emailSignin' as Href)}
                     >
                         <RegularText className='text-secondary'>Sign in with Fitbit</RegularText>
                     </TouchableOpacity>
