@@ -1,4 +1,4 @@
-import {View, ScrollView} from 'react-native';
+import {View, ScrollView, TouchableOpacity} from 'react-native';
 import HomeStats from "@/components/HomeStats/HomeStats";
 import {LightText, MediumText, RegularText, SemiBoldText} from "@/components/StyledText";
 import HomeStatsItem from "@/components/HomeStats/HomeStatsItem";
@@ -10,6 +10,7 @@ import Spinner from "react-native-loading-spinner-overlay";
 import {handleConnectionError} from "@/util/errors";
 import {CALORIES_PER_STEP, STEP_LENGTH_METERS} from "@/constants/config";
 import {ALERT_TYPE, Dialog} from "react-native-alert-notification";
+import {Href, useRouter} from "expo-router";
 
 const HomeScreen = () => {
 
@@ -24,6 +25,7 @@ const HomeScreen = () => {
     const lastTimestampRef = useRef(0);
     const accumulatedStepsRef = useRef(0);
     const {userData, userMetricsData, updateUserMetricsData} = useAppContext();
+    const router = useRouter();
 
     const fetchMetricData = () => {
         if (userData?.uid) {
@@ -188,24 +190,33 @@ const HomeScreen = () => {
 
             <View className='mt-4'>
                 <RegularText className='text-lg mb-2 pl-2'>Activity</RegularText>
-                <View className='mb-3 bg-white p-4 rounded-2xl'>
+                <TouchableOpacity className='mb-3 bg-white p-4 rounded-2xl' onPress={() => router.replace('/(activity)/activity' as Href)}>
                     <MediumText className='text-lg mb-2'>Exercise days</MediumText>
                     <View className='flex-row justify-between items-center'>
                         <View>
-                            <SemiBoldText className='text-4xl'>0 of 5</SemiBoldText>
+                            <SemiBoldText className='text-4xl'>
+                                {userMetricsData?.filter(metric => metric.activities.length > 0).length} of {userData?.goals?.exerciseDays}
+                            </SemiBoldText>
                             <LightText>This week</LightText>
                         </View>
                         <View className='flex-row justify-between mt-2'>
-                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-                                <View key={index} className='flex items-center'>
-                                    <View style={{backgroundColor: '#C7E0DA', borderRadius: 8}}
-                                          className='w-5 h-12 rounded-2xl mr-1'/>
-                                    <LightText className='mt-2'>{day}</LightText>
-                                </View>
-                            ))}
+                            {userMetricsData?.map((metric, index) => {
+                                const date = new Date(metric.date);
+
+                                return (
+                                    <View key={index} className='flex items-center'>
+                                        {metric.activities.length > 0 ?
+                                            <View className='w-5 h-12 bg-tintGreen rounded-2xl mr-1'/>
+                                            :
+                                            <View className='w-5 h-12 bg-secondaryGreen rounded-2xl mr-1'/>
+                                        }
+                                        <LightText className='mt-2'>{date.toLocaleDateString('en-US', { weekday: 'short' })[0]}</LightText>
+                                    </View>
+                                )
+                            })}
                         </View>
                     </View>
-                </View>
+                </TouchableOpacity>
             </View>
             <View className='gap-y-3'>
                 <HomeStatsItem title='Steps' value={stats.steps} goalValue={userData?.goals?.steps}

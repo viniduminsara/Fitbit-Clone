@@ -28,10 +28,22 @@ const ActivityScreen = () => {
         []
     );
 
+    const getDateRange = () => {
+        if (userMetricsData){
+            const firstDate = new Date(userMetricsData[0].date);
+            const lastDate = new Date(userMetricsData[userMetricsData.length - 1].date);
+
+            // Format dates
+            const formatDate = (date: Date) => date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+
+            return `${formatDate(firstDate)} - ${formatDate(lastDate)}`;
+        }
+    };
+
     return (
         <View className='flex-1'>
             <ScrollView className='w-full h-full px-4'>
-                <RegularText className='text-lg text-center mt-4'>27 Oct - 2 Nov</RegularText>
+                <RegularText className='text-lg text-center mt-4'>{getDateRange()}</RegularText>
                 <View className='mt-8'>
                     <View className='flex-row items-center'>
                         <SemiBoldText className='text-5xl mr-1'>{userMetricsData?.filter(metric => metric.activities.length > 0).length}</SemiBoldText>
@@ -63,6 +75,7 @@ const ActivityScreen = () => {
 
                         return (
                             <ActivityItem
+                                key={index}
                                 date={date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })}
                                 activities={metric.activities}
                             />
