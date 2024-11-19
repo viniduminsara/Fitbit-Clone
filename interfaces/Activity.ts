@@ -1,6 +1,8 @@
 interface IActivity {
     activityType: string;
-    time: string;
-    distance: number;
-    duration: number;
+    date: Date;
+    startTime: string;
+    activitySteps: number;
+    activityDistance: number;
+    activityCaloriesBurned: number;
 }

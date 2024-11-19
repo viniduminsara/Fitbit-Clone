@@ -2,9 +2,12 @@ import {View, ScrollView} from 'react-native';
 import HomeStats from "@/components/HomeStats/HomeStats";
 import {LightText, MediumText, RegularText, SemiBoldText} from "@/components/StyledText";
 import HomeStatsItem from "@/components/HomeStats/HomeStatsItem";
-import {useCallback, useEffect, useRef, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {Accelerometer} from "expo-sensors";
 import {useAppContext} from "@/context/AppContext";
+import {getMetricsData, updateMetricsData} from "@/service/metricsService";
+import Spinner from "react-native-loading-spinner-overlay";
+import {handleConnectionError} from "@/util/errors";
 
 const STEP_LENGTH_METERS = 0.762;
 const CALORIES_PER_STEP = 0.04;
@@ -17,14 +20,50 @@ const HomeScreen = () => {
         calories: 0,
     });
     const [isCounting, setCounting] = useState(false);
+    const [isLoading, setLoading] = useState(false);
     const lastYRef = useRef(0);
     const lastTimestampRef = useRef(0);
     const accumulatedStepsRef = useRef(0);
-    const {userData} = useAppContext();
+    const {userData, updateUserMetricsData} = useAppContext();
+
+    const fetchMetricData = () => {
+        if (userData?.uid) {
+            setLoading(true);
+            getMetricsData(userData?.uid)
+                .then((res: any) => {
+                    updateUserMetricsData(res.data);
+                    const todayData = res.data[0];
+                    setStats((prevState) => ({
+                        steps: todayData.steps,
+                        distance: todayData.distance,
+                        calories: todayData.caloriesBurned
+                    }))
+                    setLoading(false);
+                })
+                .catch((err) => {
+                    console.log('Error: ', err);
+                })
+        }
+    }
+
+    useEffect(() => {
+        fetchMetricData();
+    }, []);
 
     const updateStats = useCallback(() => {
         setStats((prevState) => {
             const newSteps = prevState.steps + accumulatedStepsRef.current;
+
+            if (userData?.uid){
+                updateMetricsData(userData?.uid, {
+                    steps: newSteps,
+                    distance: ((newSteps * STEP_LENGTH_METERS) / 1000),
+                    caloriesBurned: newSteps * CALORIES_PER_STEP
+                })
+                    .then((res) => console.log('Metrics updated!'))
+                    .catch((err) => handleConnectionError())
+            }
+
             return {
                 steps: newSteps,
                 distance: (newSteps * STEP_LENGTH_METERS) / 1000,
@@ -99,6 +138,7 @@ const HomeScreen = () => {
 
     return (
         <ScrollView className='w-full h-full px-4'>
+            <Spinner visible={isLoading} color='#08B9AF'/>
             <View className='items-center mt-4 mb-6'>
                 <SemiBoldText className='text-xl'>Today</SemiBoldText>
             </View>
