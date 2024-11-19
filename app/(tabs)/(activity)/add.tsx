@@ -1,31 +1,40 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, Platform } from 'react-native';
+import {View, Text, TextInput, TouchableOpacity, Modal, Platform, ScrollView} from 'react-native';
 import { SelectList } from 'react-native-dropdown-select-list';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import {MediumText, RegularText, SemiBoldText} from "@/components/StyledText";
+import {ALERT_TYPE, Dialog, Toast} from "react-native-alert-notification";
+import {logActivityValidation} from "@/util/validation";
+import {STEP_LENGTH_METERS} from "@/constants/config";
+import {getMetricsData, saveActivity} from "@/service/metricsService";
+import {useAppContext} from "@/context/AppContext";
+import Spinner from "react-native-loading-spinner-overlay";
+import {Href, useRouter} from "expo-router";
 
-type FormData = {
+export type ActivityFormData = {
     activity: string;
     date: Date;
-    startTime: Date;
-    duration: string;
-    distance: string;
-    calories: string;
+    startTime: string;
+    distance: number;
+    calories: number;
 };
 
 const LogExerciseScreen = () => {
-    const [formData, setFormData] = useState<FormData>({
+    const [formData, setFormData] = useState<ActivityFormData>({
         activity: "",
         date: new Date(),
-        startTime: new Date(),
-        duration: "",
-        distance: "",
-        calories: ""
+        startTime: "",
+        distance: 0,
+        calories: 0
     });
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showTimePicker, setShowTimePicker] = useState(false);
-    const [isDate, setIsDate] = useState(true); // To differentiate between date and time picker
+    const [isDate, setIsDate] = useState(true);
+    const [isLoading, setLoading] = useState(false);
+    const router = useRouter();
+    const {userData, updateUserMetricsData} = useAppContext();
 
-    const handleChange = (key: keyof FormData, value: any) => {
+    const handleChange = (key: keyof ActivityFormData, value: any) => {
         setFormData(prevState => ({
             ...prevState,
             [key]: value
@@ -33,10 +42,10 @@ const LogExerciseScreen = () => {
     };
 
     const activityOptions = [
-        { key: '1', value: 'Walk' },
-        { key: '2', value: 'Run' },
-        { key: '3', value: 'Cycle' },
-        { key: '4', value: 'Swim' },
+        { key: '0', value: 'Walk' },
+        { key: '1', value: 'Run' },
+        { key: '2', value: 'Cycle' },
+        { key: '3', value: 'Swim' },
     ];
 
     const showDatePickerHandler = () => {
@@ -56,36 +65,93 @@ const LogExerciseScreen = () => {
             if (isDate) {
                 handleChange("date", selectedDate);
             } else {
-                // Create a new Date object that retains the existing date but updates the time
-                const updatedTime = new Date(formData.startTime);
-                updatedTime.setHours(selectedDate.getHours());
-                updatedTime.setMinutes(selectedDate.getMinutes());
-                handleChange("startTime", updatedTime);
+                handleChange("startTime", `${selectedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h24', hour12: false })}`);
             }
         }
     };
 
+    const handleSubmit = () => {
+        try {
+            if (logActivityValidation(formData)){
+                setLoading(true);
+                const totalSteps = Math.round((formData.distance  * 1000) / STEP_LENGTH_METERS);
+
+                if (userData?.uid){
+                    saveActivity(userData?.uid, {
+                        activityType: formData.activity,
+                        date: formData.date,
+                        startTime: formData.startTime,
+                        activitySteps: totalSteps,
+                        activityDistance: (formData.distance * 1000),
+                        activityCaloriesBurned: formData.calories
+                    })
+                        .then(() => {
+                            getMetricsData(userData?.uid)
+                                .then((res: any) => {
+                                    updateUserMetricsData(res.data);
+                                    setLoading(false);
+                                    router.replace('/(activity)/activity' as Href);
+                                    Dialog.show({
+                                        type: ALERT_TYPE.SUCCESS,
+                                        title: 'Success',
+                                        textBody: 'Activity save successful!',
+                                        button: 'close',
+                                    });
+                                })
+                                .catch((err) => {
+                                    setLoading(false);
+                                    Dialog.show({
+                                        type: ALERT_TYPE.DANGER,
+                                        title: 'Danger',
+                                        textBody: 'Activity save unsuccessful!',
+                                        button: 'close',
+                                    })
+                                })
+                        })
+                        .catch((err) => {
+                            setLoading(false);
+                            Dialog.show({
+                                type: ALERT_TYPE.DANGER,
+                                title: 'Danger',
+                                textBody: 'Activity save unsuccessful!',
+                                button: 'close',
+                            })
+                        })
+                }
+            }
+        } catch (error: any) {
+            Toast.show({
+                type: ALERT_TYPE.WARNING,
+                title: 'Warning',
+                textBody: error.message,
+                autoClose: 2000,
+            });
+        }
+    }
+
     return (
-        <View className="flex-1 p-4 bg-gray-100">
-            <Text className="text-xl font-semibold mb-4">Log Exercise</Text>
+        <ScrollView className="flex-1 p-4 bg-gray-100">
+            <Spinner visible={isLoading} color='#08B9AF'/>
+            <SemiBoldText className="text-xl font-semibold mb-4">Log Exercise</SemiBoldText>
 
             {/* Activity Dropdown */}
-            <Text className="text-sm font-medium mb-1">Activity*</Text>
+            <MediumText className="text-sm font-medium mb-1">Activity*</MediumText>
             <SelectList
-                setSelected={(value: string) => handleChange("activity", value)}
+                setSelected={(value: string) => handleChange("activity", activityOptions[parseInt(value)].value)}
                 data={activityOptions}
                 placeholder="Select Activity"
                 boxStyles={{ borderColor: "gray", borderWidth: 1, padding: 12, borderRadius: 8, marginBottom: 16 }}
                 dropdownStyles={{ borderColor: "gray", borderRadius: 8 }}
+                inputStyles={{ fontFamily: 'Assistant_400Regular'}}
             />
 
             {/* Date Picker */}
-            <Text className="text-sm font-medium mb-1">Date*</Text>
+            <MediumText className="text-sm font-medium mb-1">Date*</MediumText>
             <TouchableOpacity
                 className="flex-row items-center border border-gray-300 p-3 rounded mb-4"
                 onPress={showDatePickerHandler}
             >
-                <Text>{formData.date.toDateString()}</Text>
+                <RegularText>{formData.date.toDateString()}</RegularText>
             </TouchableOpacity>
             {showDatePicker && (
                 <DateTimePicker
@@ -97,57 +163,49 @@ const LogExerciseScreen = () => {
             )}
 
             {/* Start Time Picker */}
-            <Text className="text-sm font-medium mb-1">Start Time*</Text>
+            <MediumText className="text-sm font-medium mb-1">Start Time*</MediumText>
             <TouchableOpacity
                 className="flex-row items-center border border-gray-300 p-3 rounded mb-4"
                 onPress={showTimePickerHandler}
             >
-                <Text>{formData.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}</Text>
+                <Text>{formData.startTime}</Text>
             </TouchableOpacity>
             {showTimePicker && (
                 <DateTimePicker
-                    value={formData.startTime}
+                    value={new Date()}
                     mode="time"
                     display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                     onChange={handleDateChange}
                 />
             )}
 
-            {/* Duration */}
-            <Text className="text-sm font-medium mb-1">Duration - min*</Text>
-            <TextInput
-                className="border border-gray-300 p-3 rounded mb-4"
-                placeholder="30"
-                value={formData.duration}
-                onChangeText={(value) => handleChange("duration", value)}
-                keyboardType="numeric"
-            />
-
             {/* Distance */}
-            <Text className="text-sm font-medium mb-1">Distance - kilometers*</Text>
+            <MediumText className="text-sm font-medium mb-1">Distance - kilometers*</MediumText>
             <TextInput
                 className="border border-gray-300 p-3 rounded mb-4"
                 placeholder="Enter distance"
-                value={formData.distance}
+                value={formData.distance.toString()}
                 onChangeText={(value) => handleChange("distance", value)}
                 keyboardType="numeric"
+                style={{ fontFamily: 'Assistant_400Regular'}}
             />
 
             {/* Energy Burned */}
-            <Text className="text-sm font-medium mb-1">Energy burned - calories</Text>
+            <MediumText className="text-sm font-medium mb-1">Energy burned - calories</MediumText>
             <TextInput
                 className="border border-gray-300 p-3 rounded mb-4"
-                placeholder="Fitbit will auto-calculate if left empty"
-                value={formData.calories}
+                placeholder="Enter estimated calories burned"
+                value={formData.calories.toString()}
                 onChangeText={(value) => handleChange("calories", value)}
                 keyboardType="numeric"
+                style={{ fontFamily: 'Assistant_400Regular'}}
             />
 
             {/* Save Button */}
-            <TouchableOpacity className="bg-green-500 p-3 rounded mt-4" onPress={() => console.log(formData)}>
-                <Text className="text-center text-white font-semibold">Save</Text>
+            <TouchableOpacity className="bg-[#018673] py-3 rounded-full mt-4" onPress={handleSubmit}>
+                <RegularText className="text-center text-white font-semibold">Save</RegularText>
             </TouchableOpacity>
-        </View>
+        </ScrollView>
     );
 };
 

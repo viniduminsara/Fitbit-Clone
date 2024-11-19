@@ -8,9 +8,8 @@ import {useAppContext} from "@/context/AppContext";
 import {getMetricsData, updateMetricsData} from "@/service/metricsService";
 import Spinner from "react-native-loading-spinner-overlay";
 import {handleConnectionError} from "@/util/errors";
-
-const STEP_LENGTH_METERS = 0.762;
-const CALORIES_PER_STEP = 0.04;
+import {CALORIES_PER_STEP, STEP_LENGTH_METERS} from "@/constants/config";
+import {ALERT_TYPE, Dialog} from "react-native-alert-notification";
 
 const HomeScreen = () => {
 
@@ -24,7 +23,7 @@ const HomeScreen = () => {
     const lastYRef = useRef(0);
     const lastTimestampRef = useRef(0);
     const accumulatedStepsRef = useRef(0);
-    const {userData, updateUserMetricsData} = useAppContext();
+    const {userData, userMetricsData, updateUserMetricsData} = useAppContext();
 
     const fetchMetricData = () => {
         if (userData?.uid) {
@@ -41,7 +40,13 @@ const HomeScreen = () => {
                     setLoading(false);
                 })
                 .catch((err) => {
-                    console.log('Error: ', err);
+                    setLoading(false);
+                    Dialog.show({
+                        type: ALERT_TYPE.DANGER,
+                        title: 'Danger',
+                        textBody: 'Something went wrong!',
+                        button: 'close',
+                    })
                 })
         }
     }
@@ -49,6 +54,16 @@ const HomeScreen = () => {
     useEffect(() => {
         fetchMetricData();
     }, []);
+
+    useEffect(() => {
+        if (userMetricsData) {
+            setStats((prevState) => ({
+                steps: userMetricsData[0].steps,
+                distance: userMetricsData[0].distance,
+                calories: userMetricsData[0].caloriesBurned
+            }))
+        }
+    }, [userMetricsData]);
 
     const updateStats = useCallback(() => {
         setStats((prevState) => {
