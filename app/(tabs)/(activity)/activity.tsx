@@ -5,11 +5,13 @@ import ActivityItem from "@/components/ActivityItem";
 import {FontAwesome6, MaterialIcons} from '@expo/vector-icons';
 import BottomSheet, {BottomSheetBackdrop} from '@gorhom/bottom-sheet';
 import {useRouter} from "expo-router";
+import {useAppContext} from "@/context/AppContext";
 
 const ActivityScreen = () => {
     const bottomSheetRef = useRef<BottomSheet>(null);
     const snapShots = useMemo(() => ['10%', '23%'], []);
     const router = useRouter();
+    const {userData, userMetricsData} = useAppContext();
 
     const handleOpenBottomSheet = () => {
         bottomSheetRef.current?.snapToIndex(1);
@@ -26,35 +28,46 @@ const ActivityScreen = () => {
         []
     );
 
-    const activities: IActivity[] = [
-        {activityType: 'Run', time: '07:31', distance: 3, duration: 30},
-        {activityType: 'Walk', time: '09:31', distance: 1.6, duration: 25},
-    ];
-
     return (
         <View className='flex-1'>
             <ScrollView className='w-full h-full px-4'>
                 <RegularText className='text-lg text-center mt-4'>27 Oct - 2 Nov</RegularText>
                 <View className='mt-8'>
                     <View className='flex-row items-center'>
-                        <SemiBoldText className='text-5xl mr-1'>1</SemiBoldText>
+                        <SemiBoldText className='text-5xl mr-1'>{userMetricsData?.filter(metric => metric.activities.length > 0).length}</SemiBoldText>
                         <SemiBoldText className='text-2xl mr-1'>of</SemiBoldText>
-                        <SemiBoldText className='text-5xl mr-1'>5</SemiBoldText>
+                        <SemiBoldText className='text-5xl mr-1'>{userData?.goals?.exerciseDays}</SemiBoldText>
                         <RegularText className='text-lg'>exercise days</RegularText>
                     </View>
-                    <LightText className='text-lg'>You exercised a total of 1 time</LightText>
+                    <LightText className='text-lg'>You exercised a total of {userMetricsData?.reduce((count, metric) => count + metric.activities.length, 0)} time</LightText>
                 </View>
                 <View className='flex-row justify-between mt-8'>
-                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-                        <View key={index} className='flex items-center'>
-                            <View className='w-8 h-14 bg-secondaryGreen rounded-2xl mr-1'/>
-                            <LightText className='mt-2'>{day}</LightText>
-                        </View>
-                    ))}
+                    {userMetricsData?.map((metric, index) => {
+                        const date = new Date(metric.date);
+
+                        return (
+                            <View key={index} className='flex items-center'>
+                                {metric.activities.length > 0 ?
+                                    <View className='w-8 h-14 bg-tintGreen rounded-2xl mr-1'/>
+                                    :
+                                    <View className='w-8 h-14 bg-secondaryGreen rounded-2xl mr-1'/>
+                                }
+                                <LightText className='mt-2'>{date.toLocaleDateString('en-US', { weekday: 'short' })[0]}</LightText>
+                            </View>
+                        )
+                    })}
                 </View>
                 <View className='mt-8'>
-                    <ActivityItem date='Fri, 1 Nov' activities={activities}/>
-                    <ActivityItem date='Fri, 1 Nov' activities={activities}/>
+                    {userMetricsData?.map((metric, index) => {
+                        const date = new Date(metric.date);
+
+                        return (
+                            <ActivityItem
+                                date={date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                activities={metric.activities}
+                            />
+                        )
+                    })}
                 </View>
             </ScrollView>
 
