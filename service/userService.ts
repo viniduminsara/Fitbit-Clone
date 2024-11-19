@@ -27,3 +27,7 @@ export const getUserByUid = async (uid: string) => {
 export const updateUser = async (uid: string | undefined, data: any) => {
     return await patch(`/users/${uid}`, data);
 }
+
+export const updateUserGoals = async (uid: string | undefined, data: any) => {
+    return await patch(`/users/${uid}/goals`, data);
+}

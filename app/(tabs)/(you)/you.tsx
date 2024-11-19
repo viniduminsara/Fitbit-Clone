@@ -2,9 +2,11 @@ import {View, TouchableOpacity, Image, ScrollView} from 'react-native';
 import {LightText, MediumText, RegularText, SemiBoldText} from "@/components/StyledText";
 import {Feather, FontAwesome6} from "@expo/vector-icons";
 import {Href, useRouter} from "expo-router";
+import {useAppContext} from "@/context/AppContext";
 
 const YouScreen = () => {
     const router = useRouter();
+    const {userData} = useAppContext();
 
     return(
         <ScrollView className='w-full h-full px-4'>
@@ -14,8 +16,8 @@ const YouScreen = () => {
             >
                 <Image source={require('../../../assets/images/logo_black.png')} className='w-12 h-12'/>
                 <View>
-                    <SemiBoldText className='text-4xl'>Vinidu M</SemiBoldText>
-                    <SemiBoldText>Joined 2024</SemiBoldText>
+                    <SemiBoldText className='text-4xl'>{userData?.displayName}</SemiBoldText>
+                    <SemiBoldText>Joined {userData?.createdAt.split('-')[0]}</SemiBoldText>
                     <SemiBoldText className='text-tintGreen'>Edit Profile</SemiBoldText>
                 </View>
             </TouchableOpacity>
