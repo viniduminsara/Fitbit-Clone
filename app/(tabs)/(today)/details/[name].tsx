@@ -6,35 +6,50 @@ import {AnimatedCircularProgress} from "react-native-circular-progress";
 import {useAppContext} from "@/context/AppContext";
 
 const DetailsScreen = () => {
-    const { name } = useLocalSearchParams();
-    const {userData} = useAppContext();
-    const data = [
-        { value: 30, label: '0' },
-        { value: 0, label: '4 '},
-        { value: 100, label: '8' },
-        { value: 0, label: '12' },
-        { value: 50, label: '14' },
-        { value: 80, label: '16' },
-        { value: 0, label: '18' },
-        { value: 0, label: '20' },
-    ];
+    const { name, value } = useLocalSearchParams();
+    const {userData, userMetricsData} = useAppContext();
+    const data: [{ value: number, label: string }] = [];
+
+    userMetricsData?.map((metric) => {
+        if (name.toLocaleString().toLowerCase() === 'energy burned'){
+            data.push({
+                label: metric.date.toString().slice(5,10),
+                value: metric['caloriesBurned']
+            })
+        } else {
+            data.push({
+                label: metric.date.toString().slice(5,10),
+                value: metric[name.toLocaleString().toLowerCase()]
+            })
+        }
+    })
+
+    const goalValue = name.toLocaleString().toLowerCase() === 'energy burned' ? userData?.goals?.energyBurned : userData?.goals[name.toLocaleString().toLowerCase()];
+    const currentValue =  parseFloat(value);
+    const fillPercentage = goalValue ? (currentValue / goalValue) * 100 : 0;
 
     return (
         <SafeAreaView className='px-6'>
             <View className='flex-row justify-between mt-12'>
                 <View>
                     <View className='flex-row items-center'>
-                        <SemiBoldText className='text-5xl mr-1'>0</SemiBoldText>
+                        <SemiBoldText className='text-5xl mr-1'>{value}</SemiBoldText>
                         <RegularText className='text-lg'>
-                            of {name.toLocaleString().toLowerCase() === 'energy burned' ? userData?.goals?.energyBurned : userData?.goals[name.toLocaleString().toLowerCase()]} {name.toLocaleString().toLowerCase()}</RegularText>
+                            of {goalValue} {name.toLocaleString().toLowerCase()}</RegularText>
                     </View>
-                    <LightText className='text-lg'>You're {((name.toLocaleString().toLowerCase() === 'energy burned' ? userData?.goals?.energyBurned : userData?.goals[name.toLocaleString().toLowerCase()]) - 1224)} steps away from hitting</LightText>
+                    {goalValue > currentValue ?
+                        <LightText className='text-lg'>You're {(goalValue - currentValue)} away from hitting</LightText>
+
+                        :
+
+                        <LightText className='text-lg'>You've passed with {(currentValue - goalValue)} from</LightText>
+                    }
                     <LightText className='text-lg'>your daily goal</LightText>
                 </View>
                 <AnimatedCircularProgress
                     size={70}
                     width={7}
-                    fill={63}
+                    fill={fillPercentage}
                     tintColor='#018673'
                     backgroundColor='#C7E0DA'
                     lineCap='round'
@@ -46,7 +61,7 @@ const DetailsScreen = () => {
                     )}
                 </AnimatedCircularProgress>
             </View>
-            <BarChart data={data}/>
+            <BarChart data={data.reverse()}/>
         </SafeAreaView>
     )
 }

@@ -24,12 +24,12 @@ const HomeStatsItem = ({ title, image, value, goalValue, isDistance} : IHomeStat
             : value.toString();
 
     return (
-        <TouchableOpacity className='bg-white py-4 px-4 rounded-2xl' onPress={() => router.push(`/details/${title}`)}>
+        <TouchableOpacity className='bg-white py-4 px-4 rounded-2xl' onPress={() => router.push({pathname: `/details/${title}`, params: {value: value}})}>
             <MediumText>{title}</MediumText>
             <View className='flex-row justify-between items-end'>
                 <View>
                     <SemiBoldText className='text-3xl'>{formattedValue} {isDistance ? 'km' : ''}</SemiBoldText>
-                    <LightText>Yesterday</LightText>
+                    <LightText>Today</LightText>
                 </View>
                 <AnimatedCircularProgress
                     size={70}
