@@ -1,41 +1,66 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Switch } from 'react-native';
-import { Picker } from "@react-native-picker/picker";
+import { View, TextInput, TouchableOpacity } from 'react-native';
 import { LightText, MediumText, RegularText, SemiBoldText } from "@/components/StyledText";
-
-const countries = [
-    'Sri Lanka',
-    'India',
-    'United States',
-    'Australia',
-    'Canada',
-    'United Kingdom',
-    'Germany',
-    'France',
-    'China',
-    'Japan',
-    'Brazil',
-    'South Africa',
-    // Add other countries as needed
-];
+import {Href, useRouter} from "expo-router";
+import {useAppContext} from "@/context/AppContext";
+import {ALERT_TYPE, Dialog, Toast} from "react-native-alert-notification";
+import {updateUser} from "@/service/userService";
+import Spinner from "react-native-loading-spinner-overlay";
 
 const EditSocialProfileScreen = () => {
+    const [isLoading, setLoading] = useState(false);
+    const router = useRouter();
+    const {userData, updateUserData} = useAppContext();
     const [formData, setFormData] = useState({
-        displayName: 'Vinidu M',
-        username: '',
-        useDisplayName: true,
-        location: 'Sri Lanka',
+        displayName: userData?.displayName || '',
     });
 
     const handleChange = (key: any, value: any) => {
         setFormData((prevData) => ({ ...prevData, [key]: value }));
     };
 
+    const handleSubmit = () => {
+        if (formData.displayName){
+            setLoading(true);
+            updateUser(userData?.uid, {
+                displayName: formData.displayName
+            }).then((res: any) => {
+                const userData = res.data;
+                updateUserData(userData);
+
+                setLoading(false);
+                router.replace('/profile' as Href);
+                Toast.show({
+                    type: ALERT_TYPE.SUCCESS,
+                    title: 'Warning',
+                    textBody: 'Profile information update successful',
+                    autoClose: 2000,
+                })
+            }).catch((error) => {
+                setLoading(false);
+                Dialog.show({
+                    type: ALERT_TYPE.DANGER,
+                    title: 'Danger',
+                    textBody: `${error.message}`,
+                    button: 'close',
+                })
+            })
+        } else {
+            Toast.show({
+                type: ALERT_TYPE.WARNING,
+                title: 'Warning',
+                textBody: 'Please enter display name',
+                autoClose: 2000,
+            });
+        }
+    }
+
     return (
         <View className="w-full h-full px-4 bg-gray-100">
+            <Spinner visible={isLoading} color='#08B9AF'/>
             <View className="flex-row justify-between pr-4">
                 <SemiBoldText className="text-2xl font-semibold mb-4">Social profile</SemiBoldText>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={handleSubmit}>
                     <RegularText className="text-lg text-tintGreen">Save</RegularText>
                 </TouchableOpacity>
             </View>
@@ -50,46 +75,11 @@ const EditSocialProfileScreen = () => {
                 placeholder="Display name"
                 value={formData.displayName}
                 onChangeText={(text) => handleChange('displayName', text)}
-                editable={false} // mimic disabled state
             />
             <LightText className="text-gray-500 text-sm mb-4">
                 To change your name, edit it in Google Account {'>'} Personal info
             </LightText>
 
-            <TextInput
-                className="border border-gray-300 p-2 mb-4 rounded"
-                placeholder="Username"
-                value={formData.username}
-                onChangeText={(text) => handleChange('username', text)}
-            />
-            <LightText className="text-gray-500 text-sm mb-6">
-                You can only change your username once every 60 days
-            </LightText>
-
-            <MediumText className="text-lg font-medium mb-2">
-                Which name do you want to use socially?
-            </MediumText>
-
-            <View className="flex-row items-center mb-4">
-                <Switch
-                    value={formData.useDisplayName}
-                    onValueChange={(value) => handleChange('useDisplayName', value)}
-                    trackColor={{ false: '#767577', true: '#08B9AF' }}
-                    thumbColor={formData.useDisplayName ? '#018673' : '#f4f3f4'}
-                />
-                <Text className="ml-2">{formData.useDisplayName ? 'Display name' : 'Username'}</Text>
-            </View>
-
-            <MediumText className="text-lg font-medium mb-2">Social profile location</MediumText>
-            <Picker
-                selectedValue={formData.location}
-                className="border border-gray-300 p-2 mb-4 rounded"
-                onValueChange={(itemValue) => handleChange('location', itemValue)}
-            >
-                {countries.map((country) => (
-                    <Picker.Item label={country} value={country} key={country} />
-                ))}
-            </Picker>
         </View>
     );
 };

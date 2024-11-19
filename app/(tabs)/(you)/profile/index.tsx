@@ -12,7 +12,7 @@ import {ALERT_TYPE, Dialog} from "react-native-alert-notification";
 const ProfileScreen = () => {
     const router = useRouter();
     const [isLoading, setLoading] = useState(false);
-    const {logoutUser} = useAppContext();
+    const {userData, logoutUser} = useAppContext();
 
     const handleLogout = () => {
         Dialog.show({
@@ -48,10 +48,9 @@ const ProfileScreen = () => {
                     metrics and personalize your experience</LightText>
 
                 <View className='mt-6'>
-                    <ProfileItem title='Height' value='172 cm'/>
-                    <ProfileItem title='Weight' value='92 kg'/>
-                    <ProfileItem title='Birthday' value='10 May 2005'/>
-                    <ProfileItem title='Sex' value='Male'/>
+                    <ProfileItem title='Height' value={`${userData?.height} cm`}/>
+                    <ProfileItem title='Weight' value={`${userData?.weight} kg`}/>
+                    <ProfileItem title='Gender' value={`${userData?.gender}`}/>
                 </View>
             </View>
 
@@ -67,9 +66,7 @@ const ProfileScreen = () => {
                     your location with your friends.</LightText>
 
                 <View className='mt-4'>
-                    <ProfileItem title='Display name' value='Vinidu M.'/>
-                    <ProfileItem title='Location' value='Sri Lanka'/>
-                    <ProfileItem title='Your bio' value='Share your fitness goals'/>
+                    <ProfileItem title='Display name' value={`${userData?.displayName}`}/>
                 </View>
 
                 <TouchableOpacity
