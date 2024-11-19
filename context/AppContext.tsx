@@ -3,10 +3,13 @@ import auth, {FirebaseAuthTypes} from "@react-native-firebase/auth";
 import {Href, useRouter} from "expo-router";
 import {getUserByUid} from "@/service/userService";
 import {handleConnectionError} from "@/util/errors";
+import axios from "axios";
 
 interface AppContextType {
     userData: User | null;
+    userMetricsData: IMetrics[] | null;
     updateUserData: (userData: User) => void;
+    updateUserMetricsData: (metricsData: IMetrics[]) => void;
     logoutUser : () => void;
 }
 
@@ -19,6 +22,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children }) => {
     const [user, setUser] = useState<FirebaseAuthTypes.User | null>(auth().currentUser);
     const [userData, setUserData] = useState<User | null>(null);
+    const [userMetricsData, setUserMetricsData] = useState<IMetrics[] | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -30,10 +34,21 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
                     router.replace('/(tabs)' as Href);
                 })
                 .catch((error) => {
-                    if (error.response.status === 404) {
-                        auth().signOut()
-                            .then(() => router.replace('/(auth)/welcome' as Href))
-                            .catch(() => handleConnectionError)
+                    if (axios.isAxiosError(error)) {
+                        const response = error?.response
+
+                        if (error.code === 'ERR_NETWORK' || error.code === 'ERR_CANCELED') {
+                            handleConnectionError();
+                        }
+
+                        if (response) {
+                            const statusCode = response?.status
+                            if (statusCode === 404) {
+                                auth().signOut()
+                                    .then(() => router.replace('/(auth)/welcome' as Href))
+                                    .catch(() => handleConnectionError)
+                            }
+                        }
                     } else {
                         handleConnectionError();
                     }
@@ -47,12 +62,16 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
         setUserData(userData);
     }
 
+    const updateUserMetricsData = (metricsData: IMetrics[]) => {
+        setUserMetricsData(metricsData);
+    }
+
     const logoutUser = () => {
         setUser(null);
     }
 
     return (
-        <AppContext.Provider value={{ userData, updateUserData, logoutUser }}>
+        <AppContext.Provider value={{ userData, userMetricsData, updateUserData, updateUserMetricsData, logoutUser }}>
             {children}
         </AppContext.Provider>
     );
