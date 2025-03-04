@@ -29,7 +29,7 @@ const ProfileInfoScreen = () => {
                     weight: parseInt(weight),
                     gender: gender
                 }).then((res: any) => {
-                    const userData = res.data;
+                    const userData = res.data.body;
                     updateUserData(userData);
 
                     setLoading(false);

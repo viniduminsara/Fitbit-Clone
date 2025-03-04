@@ -50,7 +50,7 @@ const EmailSigninScreen = () => {
                     .then((userCredential) => {
                         getUserByUid(userCredential.user.uid)
                             .then((res: any) => {
-                                const userData = res.data;
+                                const userData = res.data.body;
                                 updateUserData(userData);
 
                                 setLoading(false);
@@ -83,7 +83,7 @@ const EmailSigninScreen = () => {
                                     userCredential.user.email,
                                     formState.displayName
                                 ).then((res: any) => {
-                                    const userData = res.data;
+                                    const userData = res.data.body;
                                     updateUserData(userData);
 
                                     setLoading(false);

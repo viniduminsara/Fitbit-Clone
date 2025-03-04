@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import React, {useState} from 'react';
+import {Text, TouchableOpacity, View} from 'react-native';
 import {BoldText, MediumText, RegularText} from "@/components/StyledText";
 import {useAppContext} from "@/context/AppContext";
 import {updateUserGoals} from "@/service/userService";
 import {Href, useRouter} from "expo-router";
-import {ALERT_TYPE, Dialog, Toast} from "react-native-alert-notification";
+import {ALERT_TYPE} from "react-native-alert-notification";
 import Spinner from "react-native-loading-spinner-overlay";
+import * as commonFunc from "../../../../../util/commonfunc";
 
 const EditBodyFatGoal = () => {
     const {userData, updateUserData} = useAppContext();
@@ -18,25 +19,15 @@ const EditBodyFatGoal = () => {
         if (userData?.uid){
             updateUserGoals(userData.uid, {bodyFat: bodyFat})
                 .then((res: any) => {
-                    const userData = res.data;
+                    const userData = res.data.body;
                     updateUserData(userData);
 
                     setLoading(false);
                     router.replace('/goal' as Href);
-                    Toast.show({
-                        type: ALERT_TYPE.SUCCESS,
-                        title: 'Warning',
-                        textBody: 'Goal update successful',
-                        autoClose: 2000,
-                    })
+                    commonFunc.showToast(ALERT_TYPE.SUCCESS, "Success", "Body Fat Goal update successful");
                 }).catch((error) => {
                 setLoading(false);
-                Dialog.show({
-                    type: ALERT_TYPE.DANGER,
-                    title: 'Danger',
-                    textBody: `${error.message}`,
-                    button: 'close',
-                })
+                commonFunc.showToast(ALERT_TYPE.DANGER, "Error", `${error.message}`);
             })
         }
     }

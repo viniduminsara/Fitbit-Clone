@@ -39,7 +39,7 @@ const WelcomeScreen = () => {
                 .then((userCredential) => {
                      getUserByUid(userCredential.user.uid)
                          .then((res:any) => {
-                             const userData = res.data;
+                             const userData = res.data.body;
                              updateUserData(userData);
 
                              setLoading(false);
@@ -51,7 +51,7 @@ const WelcomeScreen = () => {
                                  userCredential.user.email,
                                  userCredential.user.displayName
                              ).then((res:any) => {
-                                 const userData = res.data;
+                                 const userData = res.data.body;
                                  updateUserData(userData);
 
                                  setLoading(false);

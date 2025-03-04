@@ -1,10 +1,10 @@
 import React, {useRef, useCallback, useMemo} from 'react';
-import {View, ScrollView, TouchableOpacity, Text} from 'react-native';
+import {View, ScrollView, TouchableOpacity} from 'react-native';
 import {LightText, MediumText, RegularText, SemiBoldText} from "@/components/StyledText";
 import ActivityItem from "@/components/ActivityItem";
 import {FontAwesome6, MaterialIcons} from '@expo/vector-icons';
 import BottomSheet, {BottomSheetBackdrop} from '@gorhom/bottom-sheet';
-import {useRouter} from "expo-router";
+import {Href, useRouter} from "expo-router";
 import {useAppContext} from "@/context/AppContext";
 
 const ActivityScreen = () => {
@@ -34,7 +34,7 @@ const ActivityScreen = () => {
             const lastDate = new Date(userMetricsData[userMetricsData.length - 1].date);
 
             // Format dates
-            const formatDate = (date: Date) => date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+            const formatDate = (date: Date) => date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 
             return `${formatDate(firstDate)} - ${formatDate(lastDate)}`;
         }
@@ -64,7 +64,7 @@ const ActivityScreen = () => {
                                     :
                                     <View className='w-8 h-14 bg-secondaryGreen rounded-2xl mr-1'/>
                                 }
-                                <LightText className='mt-2'>{date.toLocaleDateString('en-US', { weekday: 'short' })[0]}</LightText>
+                                <LightText className='mt-2'>{date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })}</LightText>
                             </View>
                         )
                     })}
@@ -76,7 +76,7 @@ const ActivityScreen = () => {
                         return (
                             <ActivityItem
                                 key={index}
-                                date={date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                date={date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })}
                                 activities={metric.activities}
                             />
                         )
@@ -103,7 +103,7 @@ const ActivityScreen = () => {
                 <View className='p-4'>
                     <MediumText className='text-xl mb-4'>Add Exercise</MediumText>
                     <View className='flex-row justify-between items-center px-4'>
-                        <TouchableOpacity className='bg-secondaryGreen flex-row items-center p-6 rounded-3xl'>
+                        <TouchableOpacity className='bg-secondaryGreen flex-row items-center p-6 rounded-3xl' onPress={() => router.push('/tracking/exercise-tracking' as Href)}>
                             <FontAwesome6 name="person-running" size={20} color="black" />
                             <RegularText className='ml-2'>Start Tracking</RegularText>
                         </TouchableOpacity>

@@ -16,7 +16,7 @@ const CustomBarChart = ({ data }: { data: { value: number; label: string }[] }) 
     const height = 200; // Chart height
     const barWidth = 10;
     const spacing = 35;
-    const minHeight = 5;
+    const minHeight = 10;
 
     // Find the highest value in the data array
     const maxValue = Math.max(...data.map((item) => item.value));

@@ -1,9 +1,30 @@
-import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import axios, {AxiosHeaders, AxiosResponse, InternalAxiosRequestConfig} from 'axios';
+import auth from "@react-native-firebase/auth";
 
 const ApiService = axios.create({
     baseURL: process.env.EXPO_PUBLIC_API_BASE_URL,
     timeout: 5000,
 });
+
+// Add a request interceptor to include Firebase ID token
+ApiService.interceptors.request.use(
+    async (config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
+        const currentUser = auth().currentUser;
+
+        if (currentUser) {
+            const token = await currentUser.getIdToken();
+            if (!config.headers) {
+                config.headers = new AxiosHeaders();
+            }
+            config.headers.set('Authorization', `Bearer ${token}`);
+        }
+
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 // Define a type for query parameters
 interface QueryParams {

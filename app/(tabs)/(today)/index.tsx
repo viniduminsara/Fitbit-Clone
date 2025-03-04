@@ -32,8 +32,8 @@ const HomeScreen = () => {
             setLoading(true);
             getMetricsData(userData?.uid)
                 .then((res: any) => {
-                    updateUserMetricsData(res.data);
-                    const todayData = res.data[0];
+                    updateUserMetricsData(res.data.body);
+                    const todayData = res.data.body[0];
                     setStats((prevState) => ({
                         steps: todayData.steps,
                         distance: todayData.distance,
@@ -210,7 +210,7 @@ const HomeScreen = () => {
                                             :
                                             <View className='w-5 h-12 bg-secondaryGreen rounded-2xl mr-1'/>
                                         }
-                                        <LightText className='mt-2'>{date.toLocaleDateString('en-US', { weekday: 'short' })[0]}</LightText>
+                                        <LightText className='mt-2'>{date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })[0]}</LightText>
                                     </View>
                                 )
                             })}

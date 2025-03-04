@@ -1,4 +1,4 @@
-import {Text, TextInput, TouchableOpacity, View} from "react-native";
+import {TextInput, TouchableOpacity, View} from "react-native";
 import {Picker} from "@react-native-picker/picker";
 import React, {useState} from "react";
 import {LightText, MediumText, RegularText, SemiBoldText} from "@/components/StyledText";
@@ -6,8 +6,9 @@ import {useAppContext} from "@/context/AppContext";
 import {ProfileInfoFormValidation} from "@/util/validation";
 import {updateUser} from "@/service/userService";
 import {Href, useRouter} from "expo-router";
-import {ALERT_TYPE, Dialog, Toast} from "react-native-alert-notification";
+import {ALERT_TYPE, Toast} from "react-native-alert-notification";
 import Spinner from "react-native-loading-spinner-overlay";
+import * as commonFunc from "../../../../../util/commonfunc";
 
 const EditProfileInfoScreen = () => {
     const {userData, updateUserData} = useAppContext();
@@ -26,34 +27,19 @@ const EditProfileInfoScreen = () => {
                     weight: parseInt(weight),
                     gender: gender
                 }).then((res: any) => {
-                    const userData = res.data;
+                    const userData = res.data.body;
                     updateUserData(userData);
                     setLoading(false);
 
                     router.replace('/profile' as Href);
-                    Toast.show({
-                        type: ALERT_TYPE.SUCCESS,
-                        title: 'Warning',
-                        textBody: 'Profile information update successful',
-                        autoClose: 2000,
-                    });
+                    commonFunc.showToast(ALERT_TYPE.SUCCESS, "Success", "Profile information update successful");
                 }).catch((error) => {
                     setLoading(false);
-                    Dialog.show({
-                        type: ALERT_TYPE.DANGER,
-                        title: 'Danger',
-                        textBody: `${error.message}`,
-                        button: 'close',
-                    })
+                    commonFunc.showToast(ALERT_TYPE.DANGER, "Error", `${error.message}`);
                 })
             }
         } catch (error: any) {
-            Toast.show({
-                type: ALERT_TYPE.WARNING,
-                title: 'Warning',
-                textBody: error.message,
-                autoClose: 2000,
-            });
+            commonFunc.showToast(ALERT_TYPE.WARNING, "Warning", `${error.message}`);
         }
     }
 

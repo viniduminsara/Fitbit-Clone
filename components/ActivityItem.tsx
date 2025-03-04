@@ -18,7 +18,7 @@ const ActivityItem = ({date, activities}: IActivityItemProps) => {
                     <MediumText>{activity.startTime}</MediumText>
                     <View>
                         <SemiBoldText className='text-2xl text-right'>{activity.activityType}</SemiBoldText>
-                        <LightText>{activity.activityDistance / 1000} km  {activity.activityCaloriesBurned} cal</LightText>
+                        <LightText>{(activity.activityDistance / 1000).toFixed(1)} km  {activity.activityCaloriesBurned} cal</LightText>
                     </View>
                 </View>
             ))}

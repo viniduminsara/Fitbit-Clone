@@ -29,7 +29,7 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({ children
         if (user) {
             getUserByUid(user.uid)
                 .then((res: any) => {
-                    const userData = res.data;
+                    const userData = res.data.body;
                     setUserData(userData);
                     router.replace('/(tabs)' as Href);
                 })

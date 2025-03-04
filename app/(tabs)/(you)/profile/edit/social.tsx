@@ -6,6 +6,7 @@ import {useAppContext} from "@/context/AppContext";
 import {ALERT_TYPE, Dialog, Toast} from "react-native-alert-notification";
 import {updateUser} from "@/service/userService";
 import Spinner from "react-native-loading-spinner-overlay";
+import * as commonFunc from "../../../../../util/commonfunc";
 
 const EditSocialProfileScreen = () => {
     const [isLoading, setLoading] = useState(false);
@@ -25,33 +26,18 @@ const EditSocialProfileScreen = () => {
             updateUser(userData?.uid, {
                 displayName: formData.displayName
             }).then((res: any) => {
-                const userData = res.data;
+                const userData = res.data.body;
                 updateUserData(userData);
 
                 setLoading(false);
                 router.replace('/profile' as Href);
-                Toast.show({
-                    type: ALERT_TYPE.SUCCESS,
-                    title: 'Warning',
-                    textBody: 'Profile information update successful',
-                    autoClose: 2000,
-                })
+                commonFunc.showToast(ALERT_TYPE.SUCCESS, "Success", "Profile information update successful");
             }).catch((error) => {
                 setLoading(false);
-                Dialog.show({
-                    type: ALERT_TYPE.DANGER,
-                    title: 'Danger',
-                    textBody: `${error.message}`,
-                    button: 'close',
-                })
+                commonFunc.showToast(ALERT_TYPE.DANGER, "Error", `${error.message}`);
             })
         } else {
-            Toast.show({
-                type: ALERT_TYPE.WARNING,
-                title: 'Warning',
-                textBody: 'Please enter display name',
-                autoClose: 2000,
-            });
+            commonFunc.showToast(ALERT_TYPE.WARNING, "Warning", "Please enter display name");
         }
     }
 

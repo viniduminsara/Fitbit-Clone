@@ -6,10 +6,11 @@ import {MediumText, RegularText, SemiBoldText} from "@/components/StyledText";
 import {ALERT_TYPE, Dialog, Toast} from "react-native-alert-notification";
 import {logActivityValidation} from "@/util/validation";
 import {STEP_LENGTH_METERS} from "@/constants/config";
-import {getMetricsData, saveActivity} from "@/service/metricsService";
+import {getMetricsData} from "@/service/metricsService";
 import {useAppContext} from "@/context/AppContext";
 import Spinner from "react-native-loading-spinner-overlay";
 import {Href, useRouter} from "expo-router";
+import {saveManualActivity} from "@/service/activityService";
 
 export type ActivityFormData = {
     activity: string;
@@ -45,7 +46,7 @@ const LogExerciseScreen = () => {
         { key: '0', value: 'Walk' },
         { key: '1', value: 'Run' },
         { key: '2', value: 'Cycle' },
-        { key: '3', value: 'Swim' },
+        { key: '3', value: 'Hike' },
     ];
 
     const showDatePickerHandler = () => {
@@ -77,8 +78,8 @@ const LogExerciseScreen = () => {
                 const totalSteps = Math.round((formData.distance  * 1000) / STEP_LENGTH_METERS);
 
                 if (userData?.uid){
-                    saveActivity(userData?.uid, {
-                        activityType: formData.activity,
+                    saveManualActivity(userData?.uid, {
+                        activityType: formData.activity.toUpperCase(),
                         date: formData.date,
                         startTime: formData.startTime,
                         activitySteps: totalSteps,
@@ -88,7 +89,7 @@ const LogExerciseScreen = () => {
                         .then(() => {
                             getMetricsData(userData?.uid)
                                 .then((res: any) => {
-                                    updateUserMetricsData(res.data);
+                                    updateUserMetricsData(res.data.body);
                                     setLoading(false);
                                     router.replace('/(activity)/activity' as Href);
                                     Dialog.show({
